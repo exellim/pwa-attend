@@ -9,7 +9,7 @@ class Overtime extends Model
     //
     protected $table = 'attendances';
     protected $fillable = [
-        'user',
+        'user_id',
         'status',
         'clock_in',
         'clock_in_photo',
@@ -20,4 +20,9 @@ class Overtime extends Model
         'clock_out_lat',
         'clock_out_long',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

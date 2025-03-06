@@ -9,7 +9,7 @@ class Attendances extends Model
     //
     protected $table = 'attendances';
     protected $fillable = [
-        'user',
+        'user_id',
         'status',
         'clock_in',
         'clock_in_photo',
@@ -24,5 +24,10 @@ class Attendances extends Model
     public function task()
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

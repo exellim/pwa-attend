@@ -32,9 +32,10 @@
     <div class="flex flex-col items-center justify-center px-4 bg-gray-100 min-h-screen">
         <div class="w-full max-w-md">
             <div class="shadow-lg rounded-xl bg-white p-8">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 text-center">Enter Location</h2>
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 text-center">Lokasi</h2>
 
-                <form action="#" class="px-2">
+                <form action="{{ route('attend.submitIn') }}" method="POST" enctype= multipart/form-data class="px-2">
+                    @csrf
                     <!-- Latitude Input (Read-Only) -->
                     <div class="py-2">
                         <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
@@ -62,7 +63,7 @@
                         <label for="example-select" class="block text-sm font-medium text-gray-700">Status</label>
                         <div
                             class="border border-gray-300 rounded-lg bg-gray-50 px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-                            <select id="example-select"
+                            <select id="example-select" name="status"
                                 class="select2 w-full bg-transparent outline-none border-none focus:ring-0">
                                 <option value="">Choose an option</option>
                                 <option value="Masuk On Time">Masuk On Time</option>

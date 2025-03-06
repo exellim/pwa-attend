@@ -42,6 +42,8 @@
 </head>
 
 <body class="items-center justify-center h-full w-full bg-gray-100 py-10">
+    @include('sweetalert::alert')
+
     <div class="w-full h-full overflow-y-auto pb-20">
         @yield('content')
     </div>
