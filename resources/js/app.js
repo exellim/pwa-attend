@@ -1,5 +1,11 @@
 import './bootstrap';
+import Alpine from 'alpinejs';
 
+// Initialize Alpine.js
+window.Alpine = Alpine;
+Alpine.start();
+
+// Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')

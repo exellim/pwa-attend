@@ -15,13 +15,13 @@
                         <!-- Image & Text Container -->
                         <div class="absolute top-14 left-5 flex items-center space-x-3">
                             <!-- Avatar Image -->
-                            <img src="{{ Avatar::create('Hillary Hilton') }}" class="w-[60px] h-[60px] rounded-full"
+                            <img src="{{ Avatar::create(Auth::user()->name) }}" class="w-[60px] h-[60px] rounded-full"
                                 alt="User Avatar">
 
                             <!-- Text Content (Aligned Right) -->
                             <div class="flex flex-col text-white">
-                                <b class="text-lg">Hillary Hilton</b>
-                                <b class="text-sm text-gray-300">MS-0210</b>
+                                <b class="text-lg">{{ Auth::user()->name }}</b>
+                                <b class="text-sm text-gray-300">{{ Auth::user()->nip }}</b>
                             </div>
                         </div>
 

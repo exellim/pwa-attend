@@ -21,7 +21,7 @@
                             <!-- Text Content (Aligned Right) -->
                             <div class="flex flex-col text-white">
                                 <b class="text-lg">{{ $user->name }}</b>
-                                <b class="text-sm text-gray-300">MS-0210</b>
+                                <b class="text-sm text-gray-300">{{ $user->nip }}</b>
                             </div>
                         </div>
 
@@ -93,16 +93,46 @@
                 <h1 class="font-bold pb-2 mt-0">Absen</h1>
                 <div
                     class="grid grid-cols-1 gap-4 lg:grid-cols-1 lg:gap-8 max-h-64 overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 rounded-md">
-                    @forelse ($clockedInUsers as $clockedInUser)
-                        <div class="flex items-center space-x-3 bg-gray-100 p-4 rounded-lg shadow">
-                            <img src="{{ Avatar::create($clockedInUser->name) }}"
-                                class="w-[10px] h-[10px] px-2 py-2 rounded-full" alt="User Avatar">
-                            <div class="text-sm">
-                                <p class="font-semibold">{{ $clockedInUser->name }}</p>
-                                <p class="text-gray-500">
-                                    Status:
-                                    {{ $clockedInUser->attendances->where('clock_in', '>=', Carbon\Carbon::today())->first()->status ?? 'N/A' }}
-                                </p>
+
+                    @forelse ($clockedInUsers as $clockin)
+                        <div x-data="{ open: false }" class="relative">
+                            <!-- Clickable User Item -->
+                            <div
+                                @click="open = true"
+                                class="flex items-center space-x-3 bg-gray-100 p-4 rounded-lg shadow hover:bg-gray-200 transition duration-200 cursor-pointer">
+
+                                <img src="{{ Avatar::create($clockin->name) }}" class="w-10 h-10 rounded-full" alt="User Avatar">
+                                <div class="text-sm">
+                                    <p class="font-semibold">{{ $clockin->name }}</p>
+                                    <p class="text-gray-500">
+                                        Status:
+                                        {{ $clockin->attendances->where('clock_in', '>=', Carbon\Carbon::today())->first()->status ?? 'N/A' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Modal -->
+                            <div
+                                x-show="open"
+                                x-cloak
+                                @click.away="open = false"
+                                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+
+                                <div class="bg-white rounded-lg p-6 max-w-sm w-full relative">
+                                    <!-- Close Button -->
+                                    <button
+                                        @click="open = false"
+                                        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">
+                                        &times;
+                                    </button>
+
+                                    <h2 class="text-lg font-bold mb-2">{{ $clockin->name }}</h2>
+                                    <p class="text-gray-600">
+                                        Status:
+                                        {{ $clockin->attendances->where('clock_in', '>=', Carbon\Carbon::today())->first()->status ?? 'N/A' }}
+                                    </p>
+                                    <img src="{{ asset('storage/' . $clockin->attendances[0]->clock_in_photo) }}" class="w-fit h-auto rounded-full" alt="User Avatar">
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -112,6 +142,7 @@
             </div>
         </div>
     </div>
+
 
     <div class="flex flex-col items-center justify-center w-full px-4 pb-8">
         <div class="w-full max-w-md pb-8">
