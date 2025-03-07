@@ -38,10 +38,21 @@
                     </div>
                 </header>
 
+                @php
+                    $currentDay = now()->format('l'); // Get the current day (Monday, Tuesday, etc.)
+                    $clockInTime = $clockInTime ?? null; // Assuming $clockInTime holds the clock-in timestamp
+                    $hoursSinceClockIn = $clockInTime ? now()->diffInHours($clockInTime) : 0;
+                    $isSaturday = $currentDay === 'Saturday';
+                    $canClockOut =
+                        $hasClockedIn &&
+                        !$hasClockedOut &&
+                        (($isSaturday && now()->hour >= 1) || (!$isSaturday && $hoursSinceClockIn >= 8));
+                @endphp
+
                 <div class="grid grid-cols-2 gap-4 px-5 py-4 pb-6">
                     <!-- Clock In Button -->
                     <a class="group relative inline-block overflow-hidden border border-green-400 px-8 py-3 focus:ring-2 focus:ring-green-400 focus:outline-none
-                        {{ $hasClockedIn ? 'cursor-not-allowed opacity-50' : '' }}"
+        {{ $hasClockedIn ? 'cursor-not-allowed opacity-50' : '' }}"
                         href="{{ $hasClockedIn ? '#' : route('attend.clockIn') }}">
                         <span
                             class="absolute inset-y-0 left-0 w-[2px] bg-green-600 transition-all group-hover:w-full"></span>
@@ -52,8 +63,8 @@
 
                     <!-- Clock Out Button -->
                     <a class="group relative inline-block overflow-hidden border border-blue-400 px-8 py-3 focus:ring-2 focus:ring-blue-400 focus:outline-none
-                        {{ !$hasClockedIn || $hasClockedOut ? 'cursor-not-allowed opacity-50' : '' }}"
-                        href="{{ !$hasClockedIn || $hasClockedOut ? '#' : route('attend.clockOut') }}">
+        {{ !$canClockOut ? 'cursor-not-allowed opacity-50' : '' }}"
+                        href="{{ $canClockOut ? route('attend.clockOut') : '#' }}">
                         <span
                             class="absolute inset-y-0 left-0 w-[2px] bg-blue-600 transition-all group-hover:w-full"></span>
                         <span class="relative text-sm font-medium text-blue-600 transition-colors group-hover:text-white">
@@ -62,8 +73,9 @@
                     </a>
 
                     <!-- Overtime In -->
-                    <a class="group relative inline-block overflow-hidden border border-green-400 px-8 py-3 focus:ring-2 focus:ring-green-400 focus:outline-none"
-                        href="#">
+                    <a class="group relative inline-block overflow-hidden border border-green-400 px-8 py-3 focus:ring-2 focus:ring-green-400 focus:outline-none
+        {{ !$hasClockedOut ? 'cursor-not-allowed opacity-50' : '' }}"
+                        href="{{ $hasClockedOut ? '#oin' : '#' }}">
                         <span
                             class="absolute inset-y-0 left-0 w-[2px] bg-green-600 transition-all group-hover:w-full"></span>
                         <span class="relative text-sm font-medium text-green-600 transition-colors group-hover:text-white">
@@ -72,8 +84,9 @@
                     </a>
 
                     <!-- Overtime Out -->
-                    <a class="group relative inline-block overflow-hidden border border-blue-400 px-8 py-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                        href="#">
+                    <a class="group relative inline-block overflow-hidden border border-blue-400 px-8 py-3 focus:ring-2 focus:ring-blue-400 focus:outline-none
+        {{ !$hasClockedOut ? 'cursor-not-allowed opacity-50' : '' }}"
+                        href="{{ $hasClockedOut ? '#out' : '#' }}">
                         <span
                             class="absolute inset-y-0 left-0 w-[2px] bg-blue-600 transition-all group-hover:w-full"></span>
                         <span class="relative text-sm font-medium text-blue-600 transition-colors group-hover:text-white">
@@ -81,6 +94,7 @@
                         </span>
                     </a>
                 </div>
+
 
             </div>
         </div>
@@ -91,17 +105,18 @@
         <div class="w-full max-w-md pb-8">
             <div class="w-full shadow-lg mx-auto rounded-xl bg-white px-4 py-4">
                 <h1 class="font-bold pb-2 mt-0">Absen</h1>
-                <div
-                    class="grid grid-cols-1 gap-4 lg:grid-cols-1 lg:gap-8 max-h-64 overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 rounded-md">
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-1 lg:gap-8 max-h-64 overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 rounded-md"
+                    x-data="{ openModal: null, modalImage: '' }">
 
-                    @forelse ($clockedInUsers as $clockin)
+                    @forelse ($clockedInUsers as $index => $clockin)
                         <div x-data="{ open: false }" class="relative">
                             <!-- Clickable User Item -->
-                            <div
-                                @click="open = true"
+                            <div @click="openModal = {{ $index }}; modalImage = '{{ asset('storage/' . $clockin->attendances[0]->clock_in_photo) }}';"
                                 class="flex items-center space-x-3 bg-gray-100 p-4 rounded-lg shadow hover:bg-gray-200 transition duration-200 cursor-pointer">
 
-                                <img src="{{ Avatar::create($clockin->name) }}" class="w-10 h-10 rounded-full" alt="User Avatar">
+                                <img src="{{ Avatar::create($clockin->name) }}" class="w-10 h-10 rounded-full lazyload"
+                                    alt="User Avatar">
+
                                 <div class="text-sm">
                                     <p class="font-semibold">{{ $clockin->name }}</p>
                                     <p class="text-gray-500">
@@ -112,16 +127,15 @@
                             </div>
 
                             <!-- Modal -->
-                            <div
-                                x-show="open"
-                                x-cloak
-                                @click.away="open = false"
-                                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                            <div x-show="openModal === {{ $index }}" x-cloak
+                                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+                                @click="openModal = null; modalImage = '';">
 
-                                <div class="bg-white rounded-lg p-6 max-w-sm w-full relative">
+                                <!-- Modal Content (Clicking inside shouldn't close the modal) -->
+                                <div class="bg-white rounded-lg p-6 max-w-sm w-full relative" @click.stop>
+
                                     <!-- Close Button -->
-                                    <button
-                                        @click="open = false"
+                                    <button @click="openModal = null; modalImage = '';"
                                         class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">
                                         &times;
                                     </button>
@@ -131,7 +145,17 @@
                                         Status:
                                         {{ $clockin->attendances->where('clock_in', '>=', Carbon\Carbon::today())->first()->status ?? 'N/A' }}
                                     </p>
-                                    <img src="{{ asset('storage/' . $clockin->attendances[0]->clock_in_photo) }}" class="w-fit h-auto rounded-full" alt="User Avatar">
+
+                                    <label for="clockin">Clock In Photo:</label>
+                                    <template x-if="modalImage">
+                                        <img :src="modalImage" class="w-auto h-16 rounded-lg"
+                                            alt="Clock_in_{{ $clockin->attendances[0]->clock_in }}">
+                                    </template>
+
+                                    <p><b>Lokasi:</b>
+                                        <a href="https://www.google.com/maps?q={{ $clockin->attendances[0]->clock_in_lat }},{{ $clockin->attendances[0]->clock_in_long }}"
+                                            target="_blank" class="text-blue-500 underline">Cek Lokasi</a>
+                                    </p>
                                 </div>
                             </div>
                         </div>
