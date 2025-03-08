@@ -12,13 +12,10 @@
                             <img src="{{ asset('images/logos/only logo.png') }}" class="w-[60px]" alt="Company Logo">
                         </div>
 
-                        <!-- Image & Text Container -->
+                        <!-- User Info -->
                         <div class="absolute top-14 left-5 flex items-center space-x-3">
-                            <!-- Avatar Image -->
                             <img src="{{ Avatar::create($user->name) }}" class="w-[60px] h-[60px] rounded-full"
                                 alt="User Avatar">
-
-                            <!-- Text Content (Aligned Right) -->
                             <div class="flex flex-col text-white">
                                 <b class="text-lg">{{ $user->name }}</b>
                                 <b class="text-sm text-gray-300">{{ $user->nip }}</b>
@@ -34,25 +31,27 @@
                         <div class="absolute bottom-5 left-6 text-sm font-semibold uppercase">
                             {{ $clockInStatus }}
                         </div>
-
                     </div>
                 </header>
 
                 @php
-                    $currentDay = now()->format('l'); // Get the current day (Monday, Tuesday, etc.)
-                    $clockInTime = $clockInTime ?? null; // Assuming $clockInTime holds the clock-in timestamp
+                    $currentDay = now()->format('l');
+                    $clockInTime = $clockInTime ?? null;
                     $hoursSinceClockIn = $clockInTime ? now()->diffInHours($clockInTime) : 0;
                     $isSaturday = $currentDay === 'Saturday';
+
                     $canClockOut =
                         $hasClockedIn &&
                         !$hasClockedOut &&
                         (($isSaturday && now()->hour >= 1) || (!$isSaturday && $hoursSinceClockIn >= 8));
+                    $canOvertimeIn = $hasClockedOut && !$hasOvertimeIn;
+                    $canOvertimeOut = $hasOvertimeIn && !$hasOvertimeOut;
                 @endphp
 
                 <div class="grid grid-cols-2 gap-4 px-5 py-4 pb-6">
                     <!-- Clock In Button -->
                     <a class="group relative inline-block overflow-hidden border border-green-400 px-8 py-3 focus:ring-2 focus:ring-green-400 focus:outline-none
-        {{ $hasClockedIn ? 'cursor-not-allowed opacity-50' : '' }}"
+                    {{ $hasClockedIn ? 'cursor-not-allowed opacity-50' : '' }}"
                         href="{{ $hasClockedIn ? '#' : route('attend.clockIn') }}">
                         <span
                             class="absolute inset-y-0 left-0 w-[2px] bg-green-600 transition-all group-hover:w-full"></span>
@@ -63,7 +62,7 @@
 
                     <!-- Clock Out Button -->
                     <a class="group relative inline-block overflow-hidden border border-blue-400 px-8 py-3 focus:ring-2 focus:ring-blue-400 focus:outline-none
-        {{ !$canClockOut ? 'cursor-not-allowed opacity-50' : '' }}"
+                    {{ !$canClockOut ? 'cursor-not-allowed opacity-50' : '' }}"
                         href="{{ $canClockOut ? route('attend.clockOut') : '#' }}">
                         <span
                             class="absolute inset-y-0 left-0 w-[2px] bg-blue-600 transition-all group-hover:w-full"></span>
@@ -74,8 +73,8 @@
 
                     <!-- Overtime In -->
                     <a class="group relative inline-block overflow-hidden border border-green-400 px-8 py-3 focus:ring-2 focus:ring-green-400 focus:outline-none
-        {{ !$hasClockedOut ? 'cursor-not-allowed opacity-50' : '' }}"
-                        href="{{ $hasClockedOut ? '#oin' : '#' }}">
+                    {{ !$canOvertimeIn ? 'cursor-not-allowed opacity-50' : '' }}"
+                        href="{{ $canOvertimeIn ? route('attend.ovtclockIn') : '#' }}">
                         <span
                             class="absolute inset-y-0 left-0 w-[2px] bg-green-600 transition-all group-hover:w-full"></span>
                         <span class="relative text-sm font-medium text-green-600 transition-colors group-hover:text-white">
@@ -85,8 +84,8 @@
 
                     <!-- Overtime Out -->
                     <a class="group relative inline-block overflow-hidden border border-blue-400 px-8 py-3 focus:ring-2 focus:ring-blue-400 focus:outline-none
-        {{ !$hasClockedOut ? 'cursor-not-allowed opacity-50' : '' }}"
-                        href="{{ $hasClockedOut ? '#out' : '#' }}">
+                    {{ !$canOvertimeOut ? 'cursor-not-allowed opacity-50' : '' }}"
+                        href="{{ $canOvertimeOut ? route('attend.covtlockOut') : '#' }}">
                         <span
                             class="absolute inset-y-0 left-0 w-[2px] bg-blue-600 transition-all group-hover:w-full"></span>
                         <span class="relative text-sm font-medium text-blue-600 transition-colors group-hover:text-white">
@@ -94,8 +93,6 @@
                         </span>
                     </a>
                 </div>
-
-
             </div>
         </div>
     </div>
@@ -146,18 +143,40 @@
                                         {{ $clockin->attendances->where('clock_in', '>=', Carbon\Carbon::today())->first()->status ?? 'N/A' }}
                                     </p>
 
-                                    <label for="clockin">Clock In Photo:</label>
-                                    <template x-if="modalImage">
-                                        <img :src="modalImage" class="w-auto h-16 rounded-lg"
-                                            alt="Clock_in_{{ $clockin->attendances[0]->clock_in }}">
-                                    </template>
+                                    <!-- Side-by-Side Clock In & Out Images -->
+                                    <div class="grid grid-cols-2 gap-4 justify-center items-center mb-4">
+                                        <!-- Clock In Photo -->
+                                        <div class="flex flex-col items-center">
+                                            <p class="text-sm font-semibold text-gray-500">Clock In</p>
+                                            <template x-if="modalImage">
+                                                <img :src="modalImage"
+                                                    class="w-24 h-24 rounded-lg shadow-md border object-cover"
+                                                    alt="Clock_in_{{ $clockin->attendances[0]->clock_in ?? 'N/A' }}">
+                                            </template>
+                                        </div>
 
+                                        <!-- Clock Out Photo -->
+                                        <div class="flex flex-col items-center">
+                                            <p class="text-sm font-semibold text-gray-500">Clock Out</p>
+                                            <template
+                                                x-if="'{{ $clockin->attendances->isNotEmpty() && $clockin->attendances[0]->clock_out_photo ? asset('storage/' . $clockin->attendances[0]->clock_out_photo) : '' }}'">
+                                                <img src="{{ $clockin->attendances->isNotEmpty() && $clockin->attendances[0]->clock_out_photo ? asset('storage/' . $clockin->attendances[0]->clock_out_photo) : '' }}"
+                                                    class="w-24 h-24 rounded-lg shadow-md border object-cover"
+                                                    alt="Clock_out_{{ $clockin->attendances[0]->clock_out_photo ?? 'N/A' }}">
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Location Link -->
                                     <p><b>Lokasi:</b>
-                                        <a href="https://www.google.com/maps?q={{ $clockin->attendances[0]->clock_in_lat }},{{ $clockin->attendances[0]->clock_in_long }}"
-                                            target="_blank" class="text-blue-500 underline">Cek Lokasi</a>
+                                        <a href="https://www.google.com/maps?q={{ $clockin->attendances[0]->clock_in_lat ?? '' }},{{ $clockin->attendances[0]->clock_in_long ?? '' }}"
+                                            target="_blank" class="text-blue-500 underline">
+                                            Cek Lokasi
+                                        </a>
                                     </p>
                                 </div>
                             </div>
+
                         </div>
                     @empty
                         <p class="text-gray-500">No users have clocked in today.</p>
@@ -167,16 +186,95 @@
         </div>
     </div>
 
-
-    <div class="flex flex-col items-center justify-center w-full px-4 pb-8">
+    <!-- Scrollable Overtime Sections -->
+    <div class="flex flex-col items-center justify-center w-full px-4 pt-8">
         <div class="w-full max-w-md pb-8">
             <div class="w-full shadow-lg mx-auto rounded-xl bg-white px-4 py-4">
                 <h1 class="font-bold pb-2 mt-0">Overtime</h1>
-                <div
-                    class="grid grid-cols-1 gap-4 lg:grid-cols-1 lg:gap-8 max-h-64 overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 rounded-md">
-                    @for ($dummy = 1; $dummy <= 11; $dummy++)
-                        <div class="h-32 rounded-lg bg-gray-200"></div>
-                    @endfor
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-1 lg:gap-8 max-h-64 overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 rounded-md"
+                    x-data="{ openModal: null, modalImage: '' }">
+
+                    @forelse ($overtimeUsers as $index => $ovtIn)
+                        <div x-data="{ open: false }" class="relative">
+                            <!-- Clickable User Item -->
+                            <div @click="openModal = {{ $index }}; modalImage = '{{ $ovtIn->overtimes->isNotEmpty() ? asset('storage/' . $ovtIn->overtimes[0]->clock_in_ovt_photo) : '' }}';"
+                                class="flex items-center space-x-3 bg-gray-100 p-4 rounded-lg shadow hover:bg-gray-200 transition duration-200 cursor-pointer">
+
+                                <img src="{{ Avatar::create($ovtIn->name) }}" class="w-10 h-10 rounded-full lazyload"
+                                    alt="User Avatar">
+                                <div class="text-sm">
+                                    <p class="font-semibold">{{ $ovtIn->name }}</p>
+
+                                    <!-- Two-Column Layout -->
+                                    <div class="grid grid-cols-2 gap-4 text-gray-500">
+                                        <span>
+                                            In:
+                                            {{ $ovtIn->overtimes->isNotEmpty() ? \Carbon\Carbon::parse($ovtIn->overtimes[0]->clock_in_ovt)->format('H:i') : 'N/A' }}
+                                        </span>
+                                        <span>
+                                            Out:
+                                            {{ $ovtIn->overtimes->isNotEmpty() && $ovtIn->overtimes[0]->clock_out_ovt
+                                                ? \Carbon\Carbon::parse($ovtIn->overtimes[0]->clock_out_ovt)->format('H:i')
+                                                : 'N/A' }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Modal -->
+                            <div x-show="openModal === {{ $index }}" x-cloak
+                                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+                                @click="openModal = null; modalImage = '';">
+
+                                <!-- Modal Content (Clicking inside shouldn't close the modal) -->
+                                <div class="bg-white rounded-lg p-6 max-w-sm w-full relative" @click.stop>
+
+                                    <!-- Close Button -->
+                                    <button @click="openModal = null; modalImage = '';"
+                                        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">
+                                        &times;
+                                    </button>
+
+                                    <h2 class="text-lg font-bold mb-2">{{ $ovtIn->name }}</h2>
+
+                                    <!-- Side-by-side Images for Clock In & Out -->
+                                    <div class="grid grid-cols-2 gap-4 justify-center items-center mb-4">
+                                        <!-- Clock In Overtime Photo -->
+                                        <div class="flex flex-col items-center">
+                                            <p class="text-sm font-semibold text-gray-500">Clock In</p>
+                                            <template x-if="modalImage">
+                                                <img :src="modalImage" class="w-auto h-16 rounded-lg shadow-md border"
+                                                    alt="Clock_in_ovt_{{ $ovtIn->overtimes[0]->clock_in_ovt_photo ?? 'N/A' }}">
+                                            </template>
+                                        </div>
+
+                                        <!-- Clock Out Overtime Photo -->
+                                        <div class="flex flex-col items-center">
+                                            <p class="text-sm font-semibold text-gray-500">Clock Out</p>
+                                            <template
+                                                x-if="'{{ $ovtIn->overtimes->isNotEmpty() && $ovtIn->overtimes[0]->clock_out_ovt_photo ? asset('storage/' . $ovtIn->overtimes[0]->clock_out_ovt_photo) : '' }}'">
+                                                <img src="{{ $ovtIn->overtimes->isNotEmpty() && $ovtIn->overtimes[0]->clock_out_ovt_photo ? asset('storage/' . $ovtIn->overtimes[0]->clock_out_ovt_photo) : '' }}"
+                                                    class="w-auto h-16 rounded-lg shadow-md border"
+                                                    alt="Clock_out_ovt_{{ $ovtIn->overtimes[0]->clock_out_ovt_photo ?? 'N/A' }}">
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Location Link -->
+                                    <p><b>Lokasi:</b>
+                                        <a href="https://www.google.com/maps?q={{ $ovtIn->overtimes[0]->clock_in_ovt_lat ?? '' }},{{ $ovtIn->overtimes[0]->clock_in_ovt_long ?? '' }}"
+                                            target="_blank" class="text-blue-500 underline">
+                                            Cek Lokasi
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    @empty
+                        <p class="text-gray-500">No users have clocked in for overtime today.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
