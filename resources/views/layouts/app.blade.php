@@ -8,7 +8,12 @@
     <title>Document</title>
 
     <!-- Styles / Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if (app()->environment('local'))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('build/assets/app-DgTp-jP5.css') }}">
+        <script src="{{ asset('build/assets/app-CiJKqRuI.js') }}" defer></script>
+    @endif
     @laravelPWA
 
     <style>
@@ -42,6 +47,8 @@
 </head>
 
 <body class="items-center justify-center h-full w-full bg-gray-100 py-10">
+    @include('sweetalert::alert')
+
     <div class="w-full h-full overflow-y-auto pb-20">
         @yield('content')
     </div>

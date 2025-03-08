@@ -7,17 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 class Overtime extends Model
 {
     //
-    protected $table = 'attendances';
+    protected $table = 'overtimes';
     protected $fillable = [
-        'user',
-        'status',
-        'clock_in',
-        'clock_in_photo',
-        'clock_in_lat',
-        'clock_in_long',
-        'clock_out',
-        'clock_out_photo',
-        'clock_out_lat',
-        'clock_out_long',
+        'user_id',
+        'clock_in_ovt',
+        'clock_in_ovt_photo',
+        'clock_in_ovt_lat',
+        'clock_in_ovt_long',
+        'clock_out_ovt',
+        'clock_out_ovt_photo',
+        'clock_out_ovt_lat',
+        'clock_out_ovt_long',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
