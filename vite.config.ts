@@ -11,8 +11,13 @@ export default defineConfig({
         tailwindcss(),
     ],
     build: {
-        outDir: 'public/build', // Ensure assets are stored inside `public/build`
+        outDir: 'public/build', // Ensure this is correct
         manifest: true,
+        rollupOptions: {
+            input: {
+                app: 'resources/js/app.js',
+            },
+        },
     },
-    base: '/build/',  // Important for production!
+    base: '/build/',
 });
