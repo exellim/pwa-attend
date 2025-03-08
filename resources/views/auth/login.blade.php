@@ -8,8 +8,14 @@
     <title>Login - PRIMA KATROLINDO SEJATI</title>
 
     <!-- Styles / Scripts -->
+    @if (app()->environment('local'))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('build/assets/app-DgTp-jP5.css') }}">
+        <script src="{{ asset('build/assets/app-CiJKqRuI.js') }}" defer></script>
+    @endif
     @laravelPWA
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
 </head>
 
 <body class="flex items-center justify-center min-h-screen bg-gray-100 w-full px-2">

@@ -4,3 +4,5 @@ node_modules
 storage
 public/build -oldbuild/.vite/manifest.json
 /public/build -oldbuild
+.env
+.env

@@ -4,20 +4,19 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     plugins: [
+        tailwindcss(), // ✅ Load Tailwind first
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
         }),
-        tailwindcss(),
     ],
     build: {
-        outDir: 'public/build', // Ensure this is correct
-        manifest: true,
-        rollupOptions: {
-            input: {
-                app: 'resources/js/app.js',
-            },
-        },
+        manifest: true, // ✅ Ensures manifest.json is generated
+        outDir: 'public/build',
+        emptyOutDir: true,
     },
-    base: '/build/',
+    server: {
+        hmr: false, // Disable HMR in production
+        watch: { usePolling: true },
+    },
 });
