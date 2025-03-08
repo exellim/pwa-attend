@@ -10,5 +10,9 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
-    base: '/build/',  // Add this line
+    build: {
+        outDir: 'public/build', // Ensure assets are stored inside `public/build`
+        manifest: true,
+    },
+    base: '/build/',  // Important for production!
 });
