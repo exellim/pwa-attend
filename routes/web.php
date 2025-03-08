@@ -12,12 +12,8 @@ use Illuminate\Support\Facades\Route;
 // });
 Route::get('/', [AuthenticatedSessionController::class, 'create']);
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::middleware('auth')->group(function () {
-    Route::get('/home', [HomeController::class,'index'])->name('home.index');
+    Route::get('/', [HomeController::class,'index'])->name('home.index');
 
     Route::get('/task', [TaskController::class,'index'])->name('task.index');
 
