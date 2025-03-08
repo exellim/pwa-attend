@@ -10,4 +10,5 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    base: '/build/',  // Add this line
 });
